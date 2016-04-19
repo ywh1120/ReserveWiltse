@@ -1,0 +1,28 @@
+extends layout
+
+block content
+  
+  div
+    input(type="text", id="id",name="id" placeholder="id")
+    br
+    input(type="text", id="pass",name="pass" placeholder="pass")
+    br
+    input(type="text", id="lv",name="lv",placeholder="lv")
+    br
+    button(type="button" onclick="signup()") submit
+  script.
+        function signup(){
+        		//var jdata = {"id" : $('#inputid').val(), "pass" : $('#inputpass').val(), "lv" : $('#lv').val()}
+            //var jsondata = JSON.stringify(jdata);
+            $.ajax({
+              url:"/signup",
+              type:"POST",
+              data:"id="+$('#id').val()+"&pass="+$('#pass').val()+"&lv="+$('#lv').val(),
+              success: function(data){
+              	alert(data);
+                              },
+              error: function(){
+              
+                              }
+                      });
+                  }

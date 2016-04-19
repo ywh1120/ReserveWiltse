@@ -1,0 +1,531 @@
+extends layout
+
+block content
+  div.modal.fade(id="alert_box")
+    div.modal-dialog
+      div.modal-content
+        div.modal-header
+          button(type="button" class="close" data-dismiss="modal" aria-label="Close")
+            span(aria-hidden="true")
+          h4.modal-title 에러
+        div.modal-body
+          p(id="err_msg")
+        div.modal-footer
+          button(type="button" class="btn btn-default" data-dismiss="modal") Close
+
+  script.
+    function reserve(date,time, p_num, p_name, desc, part){
+      if(p_num == ""){
+        $('#err_msg').empty();
+        $('#err_msg').append('환자번호를 입력해주세요.');
+        $('#alert_box').modal('show');
+        return false;
+            }
+      if(p_name == ""){
+        $('#err_msg').empty();
+        $('#err_msg').append('환자성명을 입력해주세요');
+        $('#alert_box').modal('show');
+        return false;
+            }
+      if(desc == ""){
+        $('#err_msg').empty();
+        $('#err_msg').append('검사명을 선택하십시오.');
+        $('#alert_box').modal('show');
+        return false;
+            }    
+      if(part == ""){
+        $('#err_msg').empty();
+        $('#err_msg').append('부서명을 선택하십시오.');
+        $('#alert_box').modal('show');
+        return false;
+            }
+      $.ajax({
+        url:"/reservate",
+        type:"POST",
+        dataType:"JSON",
+        data:"date="+date+"&time="+time+"&patient_number="+p_num+"&patient_name="+p_name+"&description="+desc+"&part="+part,
+        success: function(data){
+        	if(data){
+            
+            		}
+                 },
+        error: function(err){
+       	  alert('데이터 작성 중 오류가 발생하였습니다.');
+       	  alert(err);
+                }    
+          });
+        }
+  nav.navbar.navbar-inverse.navbar-fixed-top
+    div.container-fluid
+      div.navbar-header
+        button(type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar")
+          span.sr-only Toggle navigation
+          span.icon-bar
+          span.icon-bar
+          span.icon-bar
+        a(class="navbar-brand" href="#") #{title}
+      div(id="navbar" class="navbar-collapse collapse")
+        form.navbar-form.navbar-right
+          div.form-group(id="divf1")
+          if (user_id != null)
+            label(id="ac_label" style='color:white;padding-right:10px;padding-top:3px') Welcome #{user_id}
+            input(id="id" name="id" type="text" placeholder="ID" class="form-control" style="margin-right:5px;display:none")
+          else
+            label(id="ac_label" style='color:white;padding-right:10px;padding-top:3px;display:none') Welcome #{user_id}
+            input(id="id" name="id" type="text" placeholder="ID" class="form-control" style="margin-right:5px")
+          if (user_id == null)
+            div.form-group(id="divf2")
+              input(id="pass" name="pass" type="password" placeholder="Password" class="form-control" style="margin-right:5px")
+          else
+            div.form-group(id="divf2", style="display:none")
+              input(id="pass" name="pass" type="password" placeholder="Password" class="form-control" style="margin-right:5px;")
+          if (user_id == null)
+            button(type="button" id="signbut" class="btn btn-success" onclick="Login()") Sign in
+          else
+            button(type="button" id="signbut" class="btn btn-success" onclick="Logout()") Sign out
+        script.
+          function Login(){
+              $.ajax({
+                url:"/login",
+                type:"POST",
+                data:"id="+$('#id').val()+"&pass="+$('#pass').val(),
+                success: function(data){
+                	if(data != 'failed'){
+                		$('#id').css('display','none');
+                		$('#divf2').css('display','none');
+                		$('#divf1').append("<label id='ac_label' style='color:white;padding-right:10px;padding-top:3px'>Welcome "+data['id']+"</label>");
+                		$('#signbut').empty();
+                		$('#signbut').append("Sign out");
+                		$('#signbut').attr('onclick', 'Logout()');
+                		$('#id').val('');
+                		$('#pass').val('');
+                	}else if(data == 'failed'){
+                	  $('#err_msg').empty();
+                	  $('#err_msg').append('아이디 비밀번호 확인해주세요.');
+              			$('#alert_box').modal('show');
+                					}
+                                },
+                error: function(err,data){
+                  //$('#alert_box').attr("aria-hidden","false");
+                	//alert('아이디 비밀번호 확인 바랍니다.');
+                	alert(err);
+                                }
+                        });
+                    }
+          function Logout(){
+            $.ajax({
+                url:"/logout",
+                type:"POST",
+                success: function(data){
+                	if(data == 'destroyed'){
+                	  $('#ac_label').css('display','none');
+                		$('#id').css('display','');
+                		$('#divf2').css('display','');
+                		$('#signbut').empty();
+                		$('#signbut').append("Sign in");
+                		$('#signbut').attr('onclick', 'Login()');
+                		
+                	}else{
+              			alert(data);
+                					}
+                                },
+                error: function(){
+                	//alert('아이디 비밀번호 확인 바랍니다.');
+                                }
+                        });
+                    }
+  div.container-fluid
+    div.row(style="margin-top:50px")
+      div.col-sm-3.col-md-2.sidebar(style="background-color:lightgrey;padding-left:5px;")
+        div(style="overflow:hidden;float:left;margin-top:30px")
+          div.form-group
+            div.row
+              div.col-md-8
+                div#datetimepicker12
+          script.
+            $(function () {
+            $('#datetimepicker12').datetimepicker({
+                  inline: true
+                      });
+                  });
+        div
+          textarea(rows="20" cols="20")
+      div.col-xs-6(style="width:525px")
+          h2 MRI Time Table #1
+          table.table.table-striped
+            thead
+              tr
+                th(style="width:50px") Time
+                th No.
+                th Name
+                th Description
+                th Part
+                th Confirm
+            tbody
+              tr
+                td 9:30
+                td 
+                  input(type="text" style="width:75px" id="patient_number1_n1" name="patient_number1_n1")
+                td 
+                  input(type="text" style="width:50px" id="patient_name1_n1" name="patient_name1_n1")
+                td 
+                  select(id="desc1_n1" name="desc1_n1")
+                    option(value="") None
+                    option(value="test1") test1
+                    option(value="test2") test2
+                    option(value="test3") test3
+                    option(value="test4") test4
+                td 
+                  select(id="part1_n1" name="part1_n1")
+                    option(value="") None
+                    option(value="MRI") MRI
+                    option(value="NS1") NS 1
+                    option(value="NS2") NS 2
+                    option(value="NS3") NS 3
+                    option(value="NS5") NS 5
+                    option(value="OS1") OS 1
+                    option(value="OS5") OS 5
+                td 
+                  span.label.label-success(style="cursor:pointer" onclick="reserve('09:30',$('#patient_number1_n1').val(),$('#patient_name1_n1').val(),$('#desc1_n1 option:selected').val(),$('#part1_n1 option:selected').val())") READY
+              tr
+                td 10:00
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success(onclick="reservate();") READY
+              tr
+                td 10:30
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 11:00
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 11:30
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 12:00
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 13:30
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 14:00
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 14:30
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 15:00
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 15:30
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 16:00
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 16:30
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 17:00
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+              tr
+                td 17:30
+                td 
+                  input(type="text" style="width:75px")
+                td 
+                  input(type="text" style="width:50px")
+                td 
+                  select
+                    option test1
+                    option test2
+                    option test3
+                    option test4
+                td 
+                  select
+                    option NS 1
+                    option NS 2
+                    option NS 3
+                    option NS 5
+                td 
+                  span.label.label-success READY
+        
+      div.col-xs-6(style="width:525px")
+          h2 MRI Time Table #2
+          table.table.table-striped
+            thead
+              tr
+                th Time
+                th No.
+                th Name
+                th Description
+                th Part
+                th Confirm
+            tbody
+              tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+              tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+              tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+              tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+              tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+              tr
+                td 1
+                td 2
+                td 3
+                td 4
+                td 5
+                td 6
+    hr
+    footer
+      p &copy; WiltseMemorialHospital 2016
+  link(rel='stylesheet', href='/stylesheets/style.css')  
+  
+  
+      
